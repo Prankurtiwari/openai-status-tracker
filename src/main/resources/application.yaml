@@ -1,0 +1,104 @@
+spring:
+  application:
+    name: openai-status-tracker
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  datasource:
+    url: jdbc:h2:mem:statusdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  security:
+    user:
+      name: admin
+      password: admin
+      roles:
+        - USER
+        - ADMIN
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000
+
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    root: INFO
+    com.statustracker: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/status-tracker.log
+
+app:
+  webhook:
+    secret: your-webhook-secret-key
+    retryAttempts: 3
+    retryDelayMs: 1000
+
+  polling:
+    enabled: true
+    intervalSeconds: 300
+    initialDelaySeconds: 10
+
+  notification:
+    slack:
+      enabled: false
+      webhook-url: "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX"
+    telegram:
+      enabled: false
+      token: "123456789:ABCdefGHIjklmnoPQRstuvWXYZabcdefghi"
+      chat-id: "-1001234567890"
+    email:
+      enabled: false
+
+  providers:
+    openai:
+      enabled: true
+      pageId: "y2j98763l56x"
+      baseUrl: "https://status.openai.com/"
+      webhookPath: "/webhook/openai"
+
+    chargebee:
+      enabled: false
+      pageId: "chargebee-page-id"
+      baseUrl: "https://status.chargebee.com/"
+      webhookPath: "/webhook/chargebee"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      simple:
+        enabled: true
