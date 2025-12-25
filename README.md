@@ -523,6 +523,7 @@ Historical Data Stored:
 
 ### UML Class Diagram
 <img width="2515" height="1192" alt="download" src="https://github.com/user-attachments/assets/5751feb5-a1e9-4613-bdac-db74f492f300" />
+
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                          UML CLASS DIAGRAM                             │
@@ -896,6 +897,7 @@ StatusPageService ──queries──> ComponentRegistry
 WebhookRegistrationService ──controls──> PollingScheduler
 ```
 
+
 #### UML Class Explanation
 
 **Layers:**
@@ -994,19 +996,6 @@ mvn clean package
 mvn spring-boot:run
 ```
 
-### Docker Setup
-
-```bash
-# Build Docker image
-docker build -t openai-status-tracker:latest .
-
-# Run Docker container
-docker run -p 8080:8080 \
-  -e POLLING_ENABLED=false \
-  -e PUBLIC_WEBHOOK_URL=https://your-domain.com/api \
-  openai-status-tracker:latest
-```
-
 ---
 
 ## ⚙️ Configuration
@@ -1017,86 +1006,107 @@ docker run -p 8080:8080 \
 spring:
   application:
     name: openai-status-tracker
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:statusdb}
-    driverClassName: ${DB_DRIVER:org.h2.Driver}
+    url: jdbc:h2:mem:statusdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  security:
+    user:
+      name: admin
+      password: admin
+      roles:
+        - USER
+        - ADMIN
+
   h2:
     console:
       enabled: true
       path: /h2-console
 
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000
+
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
   servlet:
-    context-path: ${CONTEXT_PATH:/api}
+    context-path: /api
+
+logging:
+  level:
+    root: INFO
+    com.statustracker: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/status-tracker.log
 
 app:
   webhook:
-    secret: ${WEBHOOK_SECRET:your-webhook-secret}
-    publicUrl: ${PUBLIC_WEBHOOK_URL:https://your-domain.com/api}
+    secret: your-webhook-secret-key
     retryAttempts: 3
     retryDelayMs: 1000
-  
+
   polling:
-    enabled: ${POLLING_ENABLED:false}  # Disabled by default
-    enableOnWebhookFailure: true
-    intervalSeconds: ${POLLING_INTERVAL:300}
-    initialDelaySeconds: 30
-  
+    enabled: true
+    intervalSeconds: 300
+    initialDelaySeconds: 10
+
   notification:
     slack:
-      enabled: ${SLACK_ENABLED:false}
-      webhook-url: ${SLACK_WEBHOOK_URL}
+      enabled: false
+      webhook-url: "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX"
     telegram:
-      enabled: ${TELEGRAM_ENABLED:false}
-      token: ${TELEGRAM_BOT_TOKEN}
-      chat-id: ${TELEGRAM_CHAT_ID}
-  
+      enabled: false
+      token: "123456789:ABCdefGHIjklmnoPQRstuvWXYZabcdefghi"
+      chat-id: "-1001234567890"
+    email:
+      enabled: false
+
   providers:
     openai:
       enabled: true
-      pageId: ${OPENAI_PAGE_ID:y2j98763l56x}
-      baseUrl: https://api.statuspage.io/v1
-      apiKey: ${STATUSPAGE_API_KEY:}
+      pageId: "y2j98763l56x"
+      baseUrl: "https://status.openai.com/"
+      webhookPath: "/webhook/openai"
+
+    chargebee:
+      enabled: false
+      pageId: "chargebee-page-id"
+      baseUrl: "https://status.chargebee.com/"
+      webhookPath: "/webhook/chargebee"
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
-```
-
-### Environment Variables
-
-```bash
-# Database
-export DB_URL=jdbc:postgresql://localhost:5432/status_tracker
-export DB_DRIVER=org.postgresql.Driver
-export DB_USERNAME=postgres
-export DB_PASSWORD=password
-
-# Webhook
-export PUBLIC_WEBHOOK_URL=https://your-domain.com/api
-export WEBHOOK_SECRET=your-secure-secret-key
-
-# Polling (disabled by default)
-export POLLING_ENABLED=false
-export POLLING_INTERVAL=300
-
-# Notifications
-export SLACK_ENABLED=true
-export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
-export TELEGRAM_ENABLED=true
-export TELEGRAM_BOT_TOKEN=your-bot-token
-export TELEGRAM_CHAT_ID=your-chat-id
-
-# Status Page
-export OPENAI_PAGE_ID=y2j98763l56x
-export STATUSPAGE_API_KEY=your-api-key
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      simple:
+        enabled: true
 ```
 
 ---
