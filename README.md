@@ -1228,47 +1228,6 @@ openai-status-tracker/
 └── Dockerfile
 ```
 
-### Running Tests
-
-```bash
-# Run all tests
-mvn test
-
-# Run specific test class
-mvn test -Dtest=WebhookServiceTest
-
-# Run with coverage
-mvn clean test jacoco:report
-```
-
-### Local Development with ngrok
-
-```bash
-# Terminal 1: Start application
-mvn spring-boot:run
-
-# Terminal 2: Install and run ngrok
-brew install ngrok
-ngrok http 8080
-
-# Copy ngrok URL (e.g., https://abc123.ngrok.io)
-
-# Terminal 3: Set environment and test
-export PUBLIC_WEBHOOK_URL=https://abc123.ngrok.io/api
-curl -X POST https://abc123.ngrok.io/api/webhook/openai \
-  -H "Content-Type: application/json" \
-  -d '{
-    "incident": {
-      "id": "test123",
-      "name": "Chat Completions API",
-      "status": "investigating",
-      "impact": "critical"
-    }
-  }'
-```
-
----
-
 ## 🚢 Deployment
 
 ### Production Deployment
@@ -1276,53 +1235,6 @@ curl -X POST https://abc123.ngrok.io/api/webhook/openai \
 ```bash
 # Build production JAR
 mvn clean package -DskipTests -Pproduction
-
-# Deploy to cloud
-# Option 1: Heroku
-heroku create openai-status-tracker
-heroku config:set PUBLIC_WEBHOOK_URL=https://openai-status-tracker.herokuapp.com/api
-git push heroku main
-
-# Option 2: AWS ECS
-aws ecs update-service --cluster production --service status-tracker --force-new-deployment
-
-# Option 3: Kubernetes
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-```
-
-### Docker Compose Setup
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      DB_URL: jdbc:postgresql://db:5432/status_tracker
-      DB_USERNAME: postgres
-      DB_PASSWORD: password
-      PUBLIC_WEBHOOK_URL: https://your-domain.com/api
-      SLACK_ENABLED: "true"
-      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
-    depends_on:
-      - db
-  
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: status_tracker
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
-
 ---
 
 ## 📊 Monitoring & Observability
@@ -1422,8 +1334,6 @@ This project is licensed under the MIT License - see LICENSE file for details.
 ## 📞 Support & Contact
 
 For issues, questions, or suggestions:
-- 📧 Email: support@yourcompany.com
-- 💬 Slack: #status-tracker-support
 - 🐛 Issues: GitHub Issues
 - 📚 Documentation: /docs
 
