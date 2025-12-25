@@ -26,7 +26,7 @@
 
 **Real-time status tracking of third-party services (OpenAI, Chargebee, AWS, etc.) is critical for:**
 - Alerting users about service degradation or outages
-- Correlation with application errors (was it our API or their service?)
+- Correlation with application errors
 - Transparent communication during incidents
 - Proactive incident management
 
